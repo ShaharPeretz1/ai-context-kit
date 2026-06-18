@@ -1,0 +1,24 @@
+# Cursor rules — thin pointer to /specs
+
+The real product context lives in /specs. This file just tells you to read it.
+Do not duplicate spec content here; keep this file short so it never goes stale.
+
+## Session-start hydrate — read these first, in order:
+1. specs/product.md       — what we're building and why
+2. specs/architecture.md  — the system map (~90s skim)
+3. specs/repo-map.md      — where things live
+4. specs/roadmap.md       — what's "now"
+5. specs/decisions.md     — what we already REJECTED and why. Do NOT re-suggest these.
+6. specs/features/<name>.md for the current task
+
+Then confirm understanding in 3-4 lines before writing code.
+
+## Rules
+- specs/decisions.md is binding. To revisit a rejected approach, say so explicitly
+  and cite the decision — never silently re-propose it.
+- Respect the constraints/invariants in specs/architecture.md.
+- PM owns what + why + how-we-validate; you draft the how from the architecture; the dev confirms.
+
+## Close-out
+When a chunk of work is done, follow RITUALS.md: draft doc updates (decisions,
+architecture, roadmap, feature outcome) from the diff + conversation for the human to edit.

@@ -1,0 +1,11 @@
+# Python (from the example repo)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
