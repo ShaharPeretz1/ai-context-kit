@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+<!-- ADOPTING THE KIT: if your repo already had a CLAUDE.md, do NOT overwrite it with this
+     file. Keep your existing one and paste the "Read these first" + "Rules" sections below
+     into it. This template is only a starting point for repos with no CLAUDE.md yet. -->
+
 > Thin pointer. The real context lives in [`/specs`](specs/). Don't duplicate it here —
 > keep this file short so it never goes stale.
 

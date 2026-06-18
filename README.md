@@ -62,6 +62,19 @@ project. From this repo's folder, that's:
 cp -R kit/. /path/to/your/project/
 ```
 
+> **⚠️ Already have a `CLAUDE.md` (or `.github/copilot-instructions.md`)?** Don't run the
+> command above as-is — copying replaces same-named files, so it will **overwrite** your
+> existing one. Instead, copy everything *except* that file and paste the kit's pointer
+> section into your existing file by hand. The kit's `CLAUDE.md` is only a starting point
+> for repos that don't have one yet. For example, to copy everything but `CLAUDE.md`:
+>
+> ```bash
+> rsync -a --exclude='CLAUDE.md' kit/ /path/to/your/project/
+> ```
+>
+> Then open the kit's `CLAUDE.md`, copy its "read these first" + rules section, and paste
+> it near the top of your existing `CLAUDE.md`.
+
 Then fill in `product.md`, and the tables in `architecture.md` and `repo-map.md`. Add any
 decisions you already know to `decisions.md`. (If you use the Claude Code add-on, it can
 draft these from your existing code for you.)
