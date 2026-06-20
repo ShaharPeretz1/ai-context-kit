@@ -1,0 +1,51 @@
+name: Draft spec updates
+
+# Opens a draft PR with AI-drafted spec updates whenever a PR merges to main.
+# Requires ANTHROPIC_API_KEY to be set in repo Settings → Secrets → Actions.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main, master]
+
+jobs:
+  draft-spec-updates:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get PR diff
+        run: git diff HEAD~1..HEAD > /tmp/pr.diff
+
+      - name: Draft spec updates with Claude
+        id: draft
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python3 .github/scripts/draft-spec-updates.py
+
+      - name: Open draft PR with spec updates
+        if: steps.draft.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: spec-update/pr-${{ github.event.pull_request.number }}
+          title: "docs: spec updates after #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}"
+          body: |
+            Auto-drafted spec updates triggered by PR #${{ github.event.pull_request.number }}.
+
+            **${{ steps.draft.outputs.summary }}**
+
+            Review each changed file, edit as needed, then merge.
+            This PR was opened automatically by the spec-update action.
+          commit-message: "draft spec updates after PR #${{ github.event.pull_request.number }}"
+          labels: spec-update
+          draft: true
