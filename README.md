@@ -62,18 +62,36 @@ project. From this repo's folder, that's:
 cp -R kit/. /path/to/your/project/
 ```
 
-> **⚠️ Already have a `CLAUDE.md` (or `.github/copilot-instructions.md`)?** Don't run the
-> command above as-is — copying replaces same-named files, so it will **overwrite** your
-> existing one. Instead, copy everything *except* that file and paste the kit's pointer
-> section into your existing file by hand. The kit's `CLAUDE.md` is only a starting point
-> for repos that don't have one yet. For example, to copy everything but `CLAUDE.md`:
+> **⚠️ Already have a `CLAUDE.md`, `.cursorrules`, or `.github/copilot-instructions.md`?**
+> First, check exactly which files would be overwritten:
 >
 > ```bash
-> rsync -a --exclude='CLAUDE.md' kit/ /path/to/your/project/
+> TARGET=/path/to/your/project
+> find kit -type f | while read f; do
+>   dest="$TARGET/${f#kit/}"
+>   [ -f "$dest" ] && echo "would overwrite: ${f#kit/}"
+> done
 > ```
 >
-> Then open the kit's `CLAUDE.md`, copy its "read these first" + rules section, and paste
-> it near the top of your existing `CLAUDE.md`.
+> Then use this safe copy instead — any conflicts land as `filename.kit-new` next to your
+> originals so nothing is lost:
+>
+> ```bash
+> TARGET=/path/to/your/project
+> find kit -type f | while read f; do
+>   dest="$TARGET/${f#kit/}"
+>   mkdir -p "$(dirname "$dest")"
+>   if [ -f "$dest" ]; then
+>     cp "$f" "${dest}.kit-new"
+>     echo "conflict → ${dest}.kit-new"
+>   else
+>     cp "$f" "$dest"
+>   fi
+> done
+> ```
+>
+> Diff each `.kit-new` file against your original, copy in what you need, then delete
+> the `.kit-new` files.
 
 Then fill in `product.md`, and the tables in `architecture.md` and `repo-map.md`. Add any
 decisions you already know to `decisions.md`. (If you use the Claude Code add-on, it can
