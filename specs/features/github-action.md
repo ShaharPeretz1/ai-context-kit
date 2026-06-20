@@ -31,3 +31,5 @@ updated file contents, writes them in place, and signals `has_changes` to the Ac
 - The draft is accurate enough that a human reviewer needs <2 min to approve it
 - Zero false positives: if nothing relevant changed, no PR is opened
 - no API key required — works with claude.ai subscription
+- ships as a published GitHub Action (ShaharPeretz1/ai-context-kit@v1)
+- ships as npx spec-driven init CLI
