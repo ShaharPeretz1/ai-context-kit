@@ -1,0 +1,57 @@
+name: 'Spec Close-out Prompt'
+description: 'Opens a GitHub issue with a ready-to-paste close-out prompt when a PR merges. No API key needed.'
+author: 'ShaharPeretz1'
+
+branding:
+  icon: 'book-open'
+  color: 'blue'
+
+inputs:
+  pr-number:
+    description: 'Merged PR number'
+    required: true
+  pr-title:
+    description: 'Merged PR title'
+    required: true
+  pr-body:
+    description: 'Merged PR body'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get PR diff
+      shell: bash
+      run: git diff HEAD~1..HEAD > /tmp/pr.diff
+
+    - name: Build close-out prompt
+      shell: bash
+      env:
+        PR_NUMBER: ${{ inputs.pr-number }}
+        PR_TITLE: ${{ inputs.pr-title }}
+        PR_BODY: ${{ inputs.pr-body }}
+      run: python3 "${{ github.action_path }}/scripts/draft-spec-updates.py"
+
+    - name: Ensure spec-update label exists
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh label create "spec-update" \
+          --color "0075ca" \
+          --description "Spec close-out needed" \
+          --repo "${{ github.repository }}" 2>/dev/null || true
+
+    - name: Open close-out issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ -f /tmp/issue-body.md ]; then
+          gh issue create \
+            --title "Spec close-out: PR #${{ inputs.pr-number }} — ${{ inputs.pr-title }}" \
+            --body-file /tmp/issue-body.md \
+            --label "spec-update" \
+            --repo "${{ github.repository }}"
+        fi

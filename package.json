@@ -1,0 +1,19 @@
+{
+  "name": "spec-driven",
+  "version": "1.0.0",
+  "description": "Give AI coding assistants persistent memory of your product",
+  "bin": {
+    "spec-driven": "./cli/index.js"
+  },
+  "files": [
+    "cli/",
+    "kit/specs/",
+    "action.yml",
+    "scripts/"
+  ],
+  "keywords": ["ai", "claude", "cursor", "copilot", "spec", "documentation", "context"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

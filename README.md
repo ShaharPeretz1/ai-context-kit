@@ -27,8 +27,6 @@ skill/      An optional add-on for Claude Code that automates the routine.
 example/    A small worked example with every note filled in, so you can see what "good" looks like.
 ```
 
-The kit also includes a GitHub Action that opens a draft PR with AI-drafted spec updates every time a PR merges. [See setup below.](#4-optional-auto-draft-spec-updates-on-pr-merge)
-
 ### `kit/` — the part you copy into your project
 
 ```
@@ -46,9 +44,9 @@ CLAUDE.md / .cursorrules / .github/copilot-instructions.md
 
 RITUALS.md         The two simple routines: start-of-session and end-of-session.
 
-.github/
-  workflows/spec-update.yml      GitHub Action: opens a draft PR with spec updates on every merge.
-  scripts/draft-spec-updates.py  The script the Action runs (calls Claude, writes updated files).
+.github/workflows/spec-update.yml
+                   20-line workflow that calls the published GitHub Action on every PR merge.
+                   No script to copy — the action logic lives in this repo and is fetched automatically.
 ```
 
 The "start here" files are intentionally tiny. All the real content lives in `specs/` only,
@@ -62,8 +60,17 @@ Teammates on other tools can ignore it and use `kit/` directly.
 
 ## How to use it
 
-**1. Add it to your project.** Copy everything inside `kit/` into the top level of your
-project. From this repo's folder, that's:
+**1. Add it to your project.** The fastest way is the CLI:
+
+```bash
+npx spec-driven init
+```
+
+This creates `specs/` with empty templates, adds the spec-driven context to your `CLAUDE.md`,
+and drops a 20-line `.github/workflows/spec-update.yml` into your project. No files to copy,
+no conflicts to resolve, no script to maintain.
+
+Alternatively, copy `kit/` manually:
 
 ```bash
 cp -R kit/. /path/to/your/project/

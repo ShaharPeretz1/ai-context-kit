@@ -41,7 +41,6 @@ def main():
         print("No specs/ directory — skipping")
         return
 
-    # Collect specs within total budget
     specs_parts = []
     total = 0
     for path in SPEC_FILES:

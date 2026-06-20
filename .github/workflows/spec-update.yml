@@ -1,50 +1,23 @@
 name: Spec close-out prompt
 
-# When a PR merges, opens a GitHub issue with a ready-to-paste close-out
-# prompt for claude.ai. No API key required.
-
 on:
   pull_request:
     types: [closed]
     branches: [main, master]
 
 jobs:
-  open-closeout-issue:
+  close-out:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-
-      - name: Get PR diff
-        run: git diff HEAD~1..HEAD > /tmp/pr.diff
-
-      - name: Build close-out prompt
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: python3 .github/scripts/draft-spec-updates.py
-
-      - name: Ensure spec-update label exists
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh label create "spec-update" --color "0075ca" \
-            --description "Spec close-out needed" \
-            --repo ${{ github.repository }} 2>/dev/null || true
-
-      - name: Open close-out issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh issue create \
-            --title "Spec close-out: PR #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}" \
-            --body-file /tmp/issue-body.md \
-            --label "spec-update" \
-            --repo ${{ github.repository }}
+      - uses: ./
+        with:
+          pr-number: ${{ github.event.pull_request.number }}
+          pr-title: ${{ github.event.pull_request.title }}
+          pr-body: ${{ github.event.pull_request.body }}
