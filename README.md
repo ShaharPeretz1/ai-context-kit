@@ -27,11 +27,14 @@ skill/      An optional add-on for Claude Code that automates the routine.
 example/    A small worked example with every note filled in, so you can see what "good" looks like.
 ```
 
+The kit also includes a GitHub Action that opens a draft PR with AI-drafted spec updates every time a PR merges. [See setup below.](#4-optional-auto-draft-spec-updates-on-pr-merge)
+
 ### `kit/` — the part you copy into your project
 
 ```
 specs/
   product.md       What it is, who it's for, why it matters.
+  team.md          Who owns what, how decisions get made, sprint cadence. Used by the AI and the GitHub Action.
   architecture.md  A one-page map of how the product is built (skimmable in ~90 seconds).
   roadmap.md       What's planned, and what's being worked on right now.
   decisions.md     A log of choices made — and the options you rejected, and why. The key file.
@@ -42,6 +45,10 @@ CLAUDE.md / .cursorrules / .github/copilot-instructions.md
                    Tiny "start here" files — one per AI tool — that just point to specs/.
 
 RITUALS.md         The two simple routines: start-of-session and end-of-session.
+
+.github/
+  workflows/spec-update.yml      GitHub Action: opens a draft PR with spec updates on every merge.
+  scripts/draft-spec-updates.py  The script the Action runs (calls Claude, writes updated files).
 ```
 
 The "start here" files are intentionally tiny. All the real content lives in `specs/` only,
@@ -105,6 +112,28 @@ happened — especially any new decisions or rejected ideas. You skim and approv
 **This step is the whole point — keep it quick, and the notes stay alive.**
 
 The exact prompts to copy-paste are in [`kit/RITUALS.md`](kit/RITUALS.md).
+
+**4. (Optional) Auto-draft spec updates on PR merge.**
+
+The kit ships a GitHub Action that watches for merged PRs and opens a draft PR
+with AI-drafted spec updates — so the specs stay alive without anyone remembering
+to run the close-out ritual.
+
+Setup takes two minutes:
+
+1. **Add your Anthropic API key** to the repo: Settings → Secrets and variables →
+   Actions → New repository secret → name it `ANTHROPIC_API_KEY`.
+
+2. **Fill in `specs/team.md`** — the Action reads it to write better-targeted updates
+   (ownership context, sprint cadence, how you track work).
+
+3. **That's it.** The workflow file (`.github/workflows/spec-update.yml`) was copied
+   when you ran `cp -R kit/.` in step 1. On the next PR merge to `main`, a draft PR
+   appears titled `docs: spec updates after #N — <PR title>`. Review, edit, merge.
+
+> The draft PR is intentionally a _draft_ — it's a starting point, not a finished
+> commit. The AI leans hardest on `decisions.md` since that's the highest-value file,
+> but always skim before merging.
 
 ## Who does what
 

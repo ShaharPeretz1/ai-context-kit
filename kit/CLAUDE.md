@@ -12,11 +12,12 @@
 At the start of every session, read, in order:
 
 1. [`specs/product.md`](specs/product.md) — what we're building and why
-2. [`specs/architecture.md`](specs/architecture.md) — the system map (~90s skim)
-3. [`specs/repo-map.md`](specs/repo-map.md) — where things live
-4. [`specs/roadmap.md`](specs/roadmap.md) — what's "now"
-5. [`specs/decisions.md`](specs/decisions.md) — **what we already rejected, and why — do not re-suggest these**
-6. The relevant [`specs/features/<name>.md`](specs/features/) for the task at hand
+2. [`specs/team.md`](specs/team.md) — who owns what and how decisions get made
+3. [`specs/architecture.md`](specs/architecture.md) — the system map (~90s skim)
+4. [`specs/repo-map.md`](specs/repo-map.md) — where things live
+5. [`specs/roadmap.md`](specs/roadmap.md) — what's "now"
+6. [`specs/decisions.md`](specs/decisions.md) — **what we already rejected, and why — do not re-suggest these**
+7. The relevant [`specs/features/<name>.md`](specs/features/) for the task at hand
 
 Then confirm your understanding in 3-4 lines before writing code.
 
