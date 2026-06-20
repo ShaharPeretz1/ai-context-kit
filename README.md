@@ -113,27 +113,25 @@ happened — especially any new decisions or rejected ideas. You skim and approv
 
 The exact prompts to copy-paste are in [`kit/RITUALS.md`](kit/RITUALS.md).
 
-**4. (Optional) Auto-draft spec updates on PR merge.**
+**4. (Optional) Auto-prompt spec close-out on PR merge.**
 
-The kit ships a GitHub Action that watches for merged PRs and opens a draft PR
-with AI-drafted spec updates — so the specs stay alive without anyone remembering
-to run the close-out ritual.
+The kit ships a GitHub Action that watches for merged PRs and opens a GitHub issue
+with a ready-to-paste close-out prompt. No API key or extra cost — it works with
+your existing claude.ai subscription.
 
-Setup takes two minutes:
+Setup takes one minute:
 
-1. **Add your Anthropic API key** to the repo: Settings → Secrets and variables →
-   Actions → New repository secret → name it `ANTHROPIC_API_KEY`.
+1. **Fill in `specs/team.md`** — the Action includes it in the prompt for better context.
 
-2. **Fill in `specs/team.md`** — the Action reads it to write better-targeted updates
-   (ownership context, sprint cadence, how you track work).
+2. **That's it.** The workflow (`.github/workflows/spec-update.yml`) was copied when you
+   ran `cp -R kit/.` in step 1. On the next PR merge to `main`, an issue appears titled
+   `Spec close-out: PR #N — <title>`.
 
-3. **That's it.** The workflow file (`.github/workflows/spec-update.yml`) was copied
-   when you ran `cp -R kit/.` in step 1. On the next PR merge to `main`, a draft PR
-   appears titled `docs: spec updates after #N — <PR title>`. Review, edit, merge.
+When the issue appears: open claude.ai, optionally attach your `specs/` files, paste
+the prompt from the issue, apply the suggested edits, close the issue.
 
-> The draft PR is intentionally a _draft_ — it's a starting point, not a finished
-> commit. The AI leans hardest on `decisions.md` since that's the highest-value file,
-> but always skim before merging.
+> The prompt leans hardest on `decisions.md` since that's the highest-value file.
+> The whole flow takes about 2 minutes.
 
 ## Who does what
 

@@ -1,32 +1,26 @@
 #!/usr/bin/env python3
 """
-Draft spec updates after a PR merge using Claude.
-Called by .github/workflows/spec-update.yml.
-Writes updated spec files in place; signals has_changes via GITHUB_OUTPUT.
+Build a close-out prompt from a merged PR's diff + current specs,
+and write it to /tmp/issue-body.md for the Action to post as a GitHub issue.
+No API key required.
 """
-import json
 import os
-import sys
-import urllib.request
-import urllib.error
 
-API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-PR_NUMBER = os.environ.get("PR_NUMBER", "unknown")
+PR_NUMBER = os.environ.get("PR_NUMBER", "?")
 PR_TITLE = os.environ.get("PR_TITLE", "")
 PR_BODY = os.environ.get("PR_BODY", "")
-GITHUB_OUTPUT = os.environ.get("GITHUB_OUTPUT", "")
 
 SPEC_FILES = [
     "specs/product.md",
+    "specs/team.md",
     "specs/architecture.md",
     "specs/roadmap.md",
     "specs/decisions.md",
     "specs/repo-map.md",
-    "specs/team.md",
 ]
 
-# Truncate diff to stay well within token limits
-MAX_DIFF_CHARS = 12_000
+MAX_DIFF_CHARS = 8_000
+MAX_SPECS_CHARS = 6_000
 
 
 def read_file(path):
@@ -37,153 +31,98 @@ def read_file(path):
         return None
 
 
-def write_output(key, value):
-    if GITHUB_OUTPUT:
-        with open(GITHUB_OUTPUT, "a") as f:
-            # Use multiline delimiter for values that may contain newlines
-            delimiter = "EOF_" + key.upper()
-            f.write(f"{key}<<{delimiter}\n{value}\n{delimiter}\n")
-    else:
-        print(f"OUTPUT {key}={value}")
-
-
-def call_claude(messages, system):
-    payload = json.dumps({
-        "model": "claude-sonnet-4-6",
-        "max_tokens": 4096,
-        "system": system,
-        "messages": messages,
-    }).encode()
-
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=payload,
-        headers={
-            "x-api-key": API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-    )
-
-    try:
-        with urllib.request.urlopen(req) as resp:
-            return json.loads(resp.read())["content"][0]["text"]
-    except urllib.error.HTTPError as e:
-        body = e.read().decode()
-        print(f"Claude API error {e.code}: {body}", file=sys.stderr)
-        sys.exit(1)
-
-
 def main():
-    if not API_KEY:
-        print("ANTHROPIC_API_KEY not set — skipping spec update", file=sys.stderr)
-        write_output("has_changes", "false")
-        return
-
     diff = read_file("/tmp/pr.diff") or ""
     if not diff.strip():
-        print("Empty diff — nothing to update")
-        write_output("has_changes", "false")
+        print("Empty diff — no issue needed")
         return
 
     if not os.path.isdir("specs"):
-        print("No specs/ directory found — skipping")
-        write_output("has_changes", "false")
+        print("No specs/ directory — skipping")
         return
 
-    # Read current spec files
-    specs = {p: c for p in SPEC_FILES if (c := read_file(p))}
-    if not specs:
+    # Collect specs within total budget
+    specs_parts = []
+    total = 0
+    for path in SPEC_FILES:
+        content = read_file(path)
+        if not content:
+            continue
+        remaining = MAX_SPECS_CHARS - total
+        if remaining <= 0:
+            break
+        chunk = content[:remaining]
+        if len(content) > remaining:
+            chunk += "\n... (truncated)"
+        specs_parts.append(f"=== {path} ===\n{chunk}")
+        total += len(chunk)
+
+    if not specs_parts:
         print("No spec files found — skipping")
-        write_output("has_changes", "false")
         return
 
-    specs_block = "\n\n".join(f"=== {p} ===\n{c}" for p, c in specs.items())
     truncated_diff = diff[:MAX_DIFF_CHARS]
     if len(diff) > MAX_DIFF_CHARS:
         truncated_diff += f"\n... (diff truncated at {MAX_DIFF_CHARS} chars)"
 
-    system = """\
-You are a spec maintenance assistant. After a PR merges, you draft minimal, accurate
-updates to the spec files so they stay in sync with the code.
+    specs_block = "\n\n".join(specs_parts)
+    pr_desc_line = f"\nPR description: {PR_BODY[:400]}" if PR_BODY.strip() else ""
+
+    prompt = f"""\
+Close-out for merged PR #{PR_NUMBER}: "{PR_TITLE}"{pr_desc_line}
+
+DIFF:
+```diff
+{truncated_diff}
+```
+
+CURRENT SPECS:
+{specs_block}
+
+---
+
+Draft minimal updates to the spec files that reflect what this PR changed.
 
 Rules:
 - Only update files where something genuinely changed.
-- Lean hardest on decisions.md — any technical choice made in this PR, and any approach
-  that was tried and rejected, belongs there using the existing decision template format.
+- Lean hardest on decisions.md — any choice made or approach rejected in this PR belongs there, using the existing decision template.
 - Keep changes tight: append or adjust, never rewrite from scratch.
-- Preserve all existing content; only add or modify what the PR actually changes.
-- If a file needs no update, omit it entirely.
-- Return ONLY a valid JSON object — no markdown fences, no other text."""
+- Return a short updated section (or full file if small) per file that needs changing.
+- If a file needs no update, skip it entirely.\
+"""
 
-    prompt = f"""\
-PR #{PR_NUMBER} just merged: "{PR_TITLE}"
+    issue_body = f"""\
+## Spec close-out: PR #{PR_NUMBER} — {PR_TITLE}
 
-PR description:
-{PR_BODY[:2000] if PR_BODY else "(none)"}
+Paste the prompt below into **[claude.ai](https://claude.ai)**, apply the suggested edits to your `specs/` files, then close this issue.
 
-Diff:
-{truncated_diff}
+> **For best results:** upload your `specs/` files as attachments in claude.ai before pasting — it gives Claude the full untruncated context.
 
-Current spec files:
-{specs_block}
+---
 
-Draft minimal updates to reflect what this PR changed. Return this JSON shape:
-{{
-  "updates": [
-    {{
-      "file": "specs/decisions.md",
-      "content": "... full updated file content ..."
-    }}
-  ],
-  "summary": "One sentence describing what changed and which spec files were updated."
-}}
+<details>
+<summary><strong>Prompt — click to expand, then copy all</strong></summary>
 
-If nothing needs updating, return: {{"updates": [], "summary": "No spec updates needed."}}"""
+```
+{prompt}
+```
 
-    print(f"Calling Claude for PR #{PR_NUMBER}: {PR_TITLE}")
-    raw = call_claude([{"role": "user", "content": prompt}], system)
+</details>
 
-    # Strip accidental markdown fences
-    text = raw.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        text = "\n".join(lines[1:])
-        if text.rstrip().endswith("```"):
-            text = text.rstrip()[:-3].rstrip()
+---
 
-    try:
-        result = json.loads(text)
-    except json.JSONDecodeError as e:
-        print(f"Failed to parse Claude response: {e}", file=sys.stderr)
-        print(f"Response (first 500 chars): {raw[:500]}", file=sys.stderr)
-        sys.exit(1)
+**Steps:**
+1. Open [claude.ai](https://claude.ai) in a new conversation
+2. *(Recommended)* attach your `specs/` folder files
+3. Expand the prompt above, copy it, paste it
+4. Apply the suggested edits to `specs/`
+5. Close this issue
+"""
 
-    updates = result.get("updates", [])
-    summary = result.get("summary", "No spec updates needed.")
+    with open("/tmp/issue-body.md", "w") as f:
+        f.write(issue_body)
 
-    print(f"Summary: {summary}")
-
-    if not updates:
-        write_output("has_changes", "false")
-        return
-
-    for update in updates:
-        path = update.get("file", "")
-        content = update.get("content", "")
-        if not path or not content:
-            continue
-        # Safety: only write inside specs/
-        if not path.startswith("specs/"):
-            print(f"Skipping unexpected path: {path}", file=sys.stderr)
-            continue
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
-            f.write(content)
-        print(f"Updated: {path}")
-
-    write_output("has_changes", "true")
-    write_output("summary", summary)
+    print(f"Close-out issue body written for PR #{PR_NUMBER}: {PR_TITLE}")
 
 
 if __name__ == "__main__":
