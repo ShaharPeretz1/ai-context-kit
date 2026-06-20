@@ -4,15 +4,22 @@
 
 ---
 
+### Decision 005 — No API key: Action opens a GitHub Issue with a prompt instead of calling Claude directly
+- **Date:** 2026-06-20
+- **Status:** accepted — replaces Decision 004
+- **Decision:** The GitHub Action builds a close-out prompt from the diff + specs and opens a GitHub Issue. The human pastes the prompt into claude.ai and applies the edits manually.
+- **Why:** The Anthropic API is billed separately from Claude Max subscriptions. Requiring an API key adds friction (cost, secret setup) for users who already have a claude.ai subscription. The issue-based flow preserves the human-in-the-loop guarantee at zero extra cost.
+- **Rejected alternatives:**
+  - Call Claude API directly — requires a separate API key and billing; blocked by user constraint.
+  - Use Haiku for low cost — still requires API key setup even at ~$1-2/month.
+  - Auto-commit spec updates — removed this option entirely; human review is non-negotiable.
+- **Revisit if:** A future plan tier gives API access bundled with the subscription, making the key frictionless.
+
 ### Decision 004 — Draft PRs, not auto-merge for spec updates
 - **Date:** 2026-06-20
-- **Status:** accepted
-- **Decision:** The GitHub Action opens a draft PR with spec updates; it never commits directly to main.
-- **Why:** Spec updates drafted by AI need human review. An incorrect auto-committed spec is worse than no update — it actively misleads future sessions.
-- **Rejected alternatives:**
-  - Auto-commit directly to main — too risky; AI hallucinations would silently corrupt specs.
-  - Push to a long-lived `spec-updates` branch — confusing; teams would ignore it.
-- **Revisit if:** We add a confidence score and auto-merge only high-confidence, low-diff updates.
+- **Status:** superseded by Decision 005
+- **Decision:** ~~The GitHub Action opens a draft PR with spec updates.~~
+- **Note:** Replaced when we switched from API-based to prompt-based flow. The human-in-the-loop guarantee is now enforced by the issue workflow rather than a draft PR.
 
 ### Decision 003 — Zero-dependency Python script for the Action
 - **Date:** 2026-06-20

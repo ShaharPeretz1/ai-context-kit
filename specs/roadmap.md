@@ -2,7 +2,7 @@
 
 ## Now (current iteration)
 
-- [ ] **GitHub Action** — auto-draft spec updates on PR merge → [features/github-action.md](features/github-action.md)
+- Linear integration — pull rejected decisions and roadmap state from Linear tickets
 
 ## Next
 
@@ -18,6 +18,7 @@
 
 ## Recently shipped
 
+- _(2026-06-20)_ — GitHub Action switched to no-API-key close-out prompt via GitHub Issues
 - _(2026-06-20)_ — GitHub Action (`spec-update.yml` + `draft-spec-updates.py`) + `specs/team.md` template
 - _(2026-06-20)_ — Safe-copy scripts in README (conflict check + `.kit-new` rename instead of rsync --exclude)
 - _(2026-06-18)_ — Initial kit: spec templates, Claude Code skill, worked example

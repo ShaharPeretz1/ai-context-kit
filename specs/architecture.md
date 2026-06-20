@@ -24,14 +24,14 @@ README.md              Public docs
 |-----------|----------------|----------|
 | spec templates | The memory layer — product, arch, roadmap, decisions, team | `kit/specs/` |
 | AI entry files | Point each AI tool at specs/ | `kit/CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md` |
-| GitHub Action | Opens draft PR with spec updates on every merge | `kit/.github/workflows/spec-update.yml` |
-| spec-update script | Calls Claude API, writes updated files, signals the Action | `kit/.github/scripts/draft-spec-updates.py` |
+| GitHub Action | Opens a GitHub issue with a ready-to-paste close-out prompt on every merge | `kit/.github/workflows/spec-update.yml` |
+| close-out script | Reads diff + specs, builds prompt, writes issue body — no API key | `kit/.github/scripts/draft-spec-updates.py` |
 | Claude Code skill | Automates setup, session start, close-out via `/spec-driven` | `skill/spec-driven/` |
 
 ## Data flow
 
 1. **Session start:** AI reads `CLAUDE.md` → reads all `specs/` files → confirms understanding → works.
-2. **PR merge:** Action gets diff → Python script calls Claude API with diff + specs → Claude returns JSON with updated file contents → script writes files → Action opens draft PR.
+2. **PR merge:** Action gets diff → Python script reads diff + specs, builds close-out prompt → Action opens GitHub issue with prompt → human pastes into claude.ai → applies edits → closes issue.
 3. **Close-out (manual):** Human prompts AI with RITUALS.md close-out prompt → AI drafts spec edits → human approves.
 
 ## Key tech choices
@@ -41,10 +41,10 @@ README.md              Public docs
 | Markdown files in repo | Zero infra, any AI can read, version-controlled, editable by non-devs | decisions.md#001 |
 | No SaaS / accounts | Adopters keep their data; simpler adoption | decisions.md#002 |
 | Python + urllib for Action script | Zero pip dependencies — works out of the box on ubuntu-latest | decisions.md#003 |
-| Draft PRs not auto-merge | Humans stay in the loop; prevents bad auto-commits to main | decisions.md#004 |
+| Issues not PRs for close-out | No API key needed; human stays in loop via claude.ai | decisions.md#005 |
 
 ## Constraints & invariants
 
-- The Action script must only write to `specs/` — path safety check is in the script.
+- The close-out script must only read files, never write — all writes are done by the human after reviewing Claude's output.
 - `kit/` and `skill/spec-driven/templates/` must stay in sync (same files).
 - The close-out ritual must be achievable in ~2 min of human effort.
